@@ -208,6 +208,12 @@ final class ExchangeFileManager {
         
         consoleIO.writeMessage("indexes: \(indexes.count)")
         
+        guard !indexes.isEmpty else {
+            consoleIO.writeMessage("can't create indexes. Check permissions")
+            
+            return
+        }
+        
         persistIndexes(indexes, to: indexesPath)
 
         if isDirectoryExist(at: zipPathFull) && !isDirectoryEmpty(at: zipPathFull) {
