@@ -114,7 +114,6 @@ final class ExchangeFileManager {
         }
     }
     
-    
     // MARK: Is directory
     
     private func isDirectoryEmpty(at url: URL) -> Bool {
@@ -147,22 +146,25 @@ final class ExchangeFileManager {
                               to destinationURL: URL)
     {
         var duplicateIndexes: [Index] = []
-        let count = Int(Double(indexes.count / splitCount))
-        let chunked = indexes.chunked(into: count)
-                
-        for i in 0...splitCount - 1 {
-            let destinationURLi = inputPath.deletingLastPathComponent().appendingPathComponent(C.outputDirectoryFileName + "\(i + 1)")
-            chunked[i].forEach {
-                let zipPath = destinationURLi.appendingPathComponent("\($0.name)")
-                
-                if !fileManager.fileExists(atPath: zipPath.path) {
-                    do {
-                        try fileManager.copyItem(at: $0.url, to: zipPath)
-                    } catch {
-                        print(error)
+        
+        if splitCount > 0 {
+            let count = Int(Double(indexes.count / splitCount))
+            let chunked = indexes.chunked(into: count)
+                    
+            for i in 0...splitCount - 1 {
+                let destinationURLi = inputPath.deletingLastPathComponent().appendingPathComponent(C.outputDirectoryFileName + "\(i + 1)")
+                chunked[i].forEach {
+                    let zipPath = destinationURLi.appendingPathComponent("\($0.name)")
+                    
+                    if !fileManager.fileExists(atPath: zipPath.path) {
+                        do {
+                            try fileManager.copyItem(at: $0.url, to: zipPath)
+                        } catch {
+                            print(error)
+                        }
+                    } else {
+                        duplicateIndexes.append($0)
                     }
-                } else {
-                    duplicateIndexes.append($0)
                 }
             }
         }
@@ -204,6 +206,8 @@ final class ExchangeFileManager {
         let loadedIndexes = loadIndexes(from: indexesPath)
         let indexes = loadedIndexes.isEmpty ? createIndexes(from: inputPath, fileExtension: fileExtension) : loadedIndexes
         
+        consoleIO.writeMessage("indexes: \(indexes.count)")
+        
         persistIndexes(indexes, to: indexesPath)
 
         if isDirectoryExist(at: zipPathFull) && !isDirectoryEmpty(at: zipPathFull) {
@@ -223,6 +227,8 @@ final class ExchangeFileManager {
                          splitCount: split,
                          inputPath: inputPath,
                          to: zipPathFull)
+            
+            consoleIO.writeMessage("Files extracted")
         }
         
         consoleIO.writeMessage("End")
